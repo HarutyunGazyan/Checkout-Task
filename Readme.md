@@ -14,7 +14,7 @@ Before launch, there is some feedback from the business side regarding the exper
 
 Assignment: 
  - How should we implement the new business requirements in time, and what code improvements can we manage to include before launch?
- - Use git, and implement the required changes, along with some code improvements that can be included before the initial launch. Show how you write code, and what you consider most important to fix first.
+ - Use git, follow best practice providing commits. Implement the required changes along with some code improvements that can be included before the initial launch. Show how you write code, and what you consider most important to fix first.
  - Think about further improvements, and be ready to discuss these topics further:
 	- The project does not follow our normal standards. How can this project evolve to allow us to switch from Razor Pages to for example a Vue.js front-end, without having to re-implement all business logic? 
 	- Review and note down other suggestions of improvements to this project, for example providing more clear separation of concerns, making the code less error prone or improving its readability.
