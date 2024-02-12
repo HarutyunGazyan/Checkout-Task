@@ -1,0 +1,15 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/FullStackAssignment.RazorPages/.vs/FullstackAssignment
+/FullStackAssignment.RazorPages/Checkout/bin/Debug/net6.0
+/FullStackAssignment.RazorPages/Checkout/obj
+/FullStackAssignment.RazorPages/.vs/FullStackAssignment.RazorPages/FileContentIndex
+/FullStackAssignment.RazorPages/Checkout/bin/Debug/net7.0
+/FullStackAssignment.RazorPages/.vs
+/Assignment.RazorPages/Checkout/.vs/Checkout
+/Assignment.RazorPages/Checkout/bin/Debug/net7.0
+/Assignment.RazorPages/Checkout/obj
+/FullStackAssignment.RazorPages/Checkout/.vs
+/.vs

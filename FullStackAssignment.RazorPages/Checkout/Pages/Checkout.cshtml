@@ -1,0 +1,153 @@
+﻿@page "{productId:int}"
+@using Checkout.DataAccess
+@using Checkout.Models;
+@using Checkout.Pages;
+@using Microsoft.EntityFrameworkCore
+@inject DataContext context
+@{
+    Layout = "Shared/_Layout";
+    const int offerNotSelected = 0;
+    context.Database.EnsureCreated();
+
+    var productId = Int32.Parse(RouteData.Values["productId"].ToString());
+    var query = $@"
+            SELECT
+                p.ImageUrl as ImageUrl
+                ,p.Country as Country
+                ,ofr.Id as OfferId
+                ,ofr.Name as OfferName
+                ,ofr.ExtraInfo as OfferExtraInfo       
+            FROM 
+                Product p
+            INNER JOIN Offers ofr
+                ON p.Id = ofr.ProductId
+            WHERE p.Id = {productId}
+        ";
+
+    var offers = context.Database.SqlQueryRaw<CheckoutDto>(query).ToArray();
+    var productInfo = offers.First();
+
+}
+
+<header>
+    <h1>Provide your information:</h1>
+    
+</header>
+<form>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <div class="col-md-6">
+                    <label for="ddl_country">Offer:</label>
+                    <select class="form-control" id="ddl_offer" name="offer">
+                        <option value="@offerNotSelected" selected>Select offer</option>
+                        @foreach (var offer in offers)
+                        {
+                            <option value="@(offer.OfferId)">@offer.OfferName</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="address">Email:</label>
+                <input type="text" class="form-control" id="email" name="email" placeholder="Enter e-mail address">
+            </div>
+            <div class="row form-group">
+                <div class="col">
+                    <label for="firstName">First name:</label>
+                    <input type="text" class="form-control" id="firstName" name="firstName" placeholder="Enter first name">
+                </div>
+                <div class="col">
+                    <label for="lastName">Last name:</label>
+                    <input type="text" class="form-control" id="lastName" name="lastName" placeholder="Enter last name">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="address">Address:</label>
+                <input type="text" class="form-control" id="address" name="address" placeholder="Enter address">
+            </div>
+            <div class="row form-group">
+                <div class="col">
+                    <label for="zip">ZIP code:</label>
+                    <input type="text" class="form-control" id="zipCode" name="zipCode" placeholder="Enter ZIP code">
+                </div>
+                <div class="col">
+                    <label for="telefon">Telephone:</label>
+                    <input type="text" class="form-control" id="phone" name="phone" placeholder="Enter telephone number">
+                </div>  
+            </div> <br />
+            <input type="hidden" id="country" value="@productInfo.Country">
+            <button type="submit" class="btn btn-primary">Place order</button>
+        </div>
+        <div class="col-md-6">
+            <img src="@productInfo.ImageUrl" />
+        </div>
+    </div>
+    
+</form>
+
+@section Scripts
+{
+    <script>
+        const initialOfferState = parseInt('@offerNotSelected');
+
+        const validate = () => {
+            var formIsValid = true;
+
+            const $ddl_offer = $('#ddl_offer');
+            const selectedOffer = $ddl_offer.find(":checked").val();
+            if(parseInt(selectedOffer) === initialOfferState){
+                $ddl_offer.addClass('border').addClass('border-danger');
+                formIsValid = false;
+            } 
+            else {
+                $ddl_offer.removeClass('border').removeClass('border-danger');
+            }
+
+            const $email = $('#email');
+            const email = $email.val();
+            if (email.length < 6 || email.indexOf('@@') < 0) {
+                $email.addClass('border').addClass('border-danger');
+                formIsValid = false;
+            } else {
+                $email.removeClass('border').removeClass('border-danger');
+            }
+
+            $('[type="submit"]').prop('disabled', !formIsValid);
+        }
+
+        const submitOrder = (e) => {
+
+            e.preventDefault();
+            $.ajax({
+                type: 'POST',
+                contentType: 'application/json',
+                url: 'https://dev-assignment.mediafy.com/api/Orders',
+                data: JSON.stringify({
+                    'OfferId': parseInt($('#ddl_offer').find(":checked").val()),
+                    'FirstName': $('#firstName').val(),
+                    'LastName': $('#lastName').val(),
+                    'Address': $('#address').val(),
+                    'Email': $('#email').val(),
+                    'ZipCode': $('#zipCode').val(),
+                    'Telephone': $('#phone').val(),
+                    'Country': parseInt($('#country').val())
+                }),
+                success: function(){
+                    alert('Thank you for your order!');
+                },
+                error: function (jqXHR, textStatus, errorThrown){
+                    alert('Oh no, we encountered an error!');
+                }
+            });
+        }
+
+        $(() => {
+            $('form input, form select').on('change', validate);
+            validate();
+
+            $('form').on('submit', submitOrder);
+        })        
+    
+    </script>
+}  
