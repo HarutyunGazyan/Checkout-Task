@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System.Text;
 
-namespace Checkout.Repositories
+namespace Checkout.Infrastructure
 {
     public class CheckoutHelper : ICheckoutHelper
     {

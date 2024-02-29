@@ -3,7 +3,7 @@ using Checkout.Models;
 using Checkout.Services.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
-namespace Checkout.Repositories
+namespace Checkout.Infrastructure
 {
     public class ProductRepository : IProductRepository
     {

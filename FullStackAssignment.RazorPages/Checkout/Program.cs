@@ -4,7 +4,7 @@ using Checkout.DTOs.Responces;
 using Checkout.Middleware;
 using Checkout.Models;
 using Checkout.Options;
-using Checkout.Repositories;
+using Checkout.Infrastructure;
 using Checkout.Services;
 using Checkout.Services.Abstractions;
 
