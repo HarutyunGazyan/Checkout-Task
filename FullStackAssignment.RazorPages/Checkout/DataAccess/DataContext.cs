@@ -6,6 +6,11 @@ namespace Checkout.DataAccess
 {
     public class DataContext : DbContext
     {
+        public DataContext(DbContextOptions<DataContext> options)
+            :base(options)
+        {
+            Database.EnsureCreated();
+        }
         protected override void OnConfiguring
             (DbContextOptionsBuilder optionsBuilder)
         {
@@ -14,6 +19,9 @@ namespace Checkout.DataAccess
             optionsBuilder.UseSqlite(cnn);
             optionsBuilder.EnableSensitiveDataLogging();
         }
+
+        public virtual DbSet<Product> Product { get; set; } // The reason this is not plural is that SQL scripts at razor pages expect "Product" table
+        public virtual DbSet<Offer> Offers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

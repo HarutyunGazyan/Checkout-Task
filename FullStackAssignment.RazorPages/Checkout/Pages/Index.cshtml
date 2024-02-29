@@ -1,49 +1,38 @@
 ﻿@page
-@using Checkout.DataAccess
-@using Checkout.Pages
-@using Microsoft.EntityFrameworkCore
-@model Checkout.Pages.IndexModel
-@inject DataContext context
 @{
     Layout = "Shared/_Layout";
-    context.Database.EnsureCreated();
-
-    var sql = @"
-            SELECT
-                p.Id as ProductId
-                ,p.Name as ProductName
-                ,p.Description as ProductDescription
-                ,p.ImageUrl as ImageUrl
-                ,ofr.Id as OfferId
-                ,ofr.Name as OfferName
-                ,ofr.ExtraInfo as OfferExtraInfo
-                ,ofr.Price as OfferPrice
-            FROM 
-                Offers ofr
-            INNER JOIN Product p
-                ON p.Id = ofr.ProductId
-        ";
-    var offers = context.Database.SqlQueryRaw<IndexDto>(sql);
 }
-
-<div class="row mb-2">
-    @foreach (var offer in offers.ToList())
-    {
-        <div class="col-md-4">
-            <div class="row g-0 border rounded overflow-hidden flex-md-row mb-3 shadow-sm h-md-250 position-relative">
-                <div class="col p-2 d-flex flex-column position-static">
-                    <h3 class="mb-0">@offer.ProductName</h3>
-                    <strong class="d-inline-block mb-2">@offer.OfferName</strong>
-                    <p class="d-inline-block mb-2">@offer.OfferExtraInfo</p>
-                    <a href="@Url.Page("Checkout", new { productId = offer.ProductId })" class="text-decoration-none">Buy now</a>
-                </div>
-                <div class="col-auto d-none d-lg-block">
-                    <img src="@offer.ImageUrl" style="max-height: 200px" />
-                </div>
-                <div class="p-2">
-                    <p class="card-text mb-auto">@offer.ProductDescription</p>
-                </div>
-            </div>
-        </div>
-    }
+<div class="row mb-2" id="container">
 </div>
+@section Scripts
+{
+    <script>
+        $(document).ready(function () {
+            $.get("api/Product", function (data, status) {
+                for (let i = 0; i < data.length; i++) {
+                    var extraInfo = data[i].offers[0].extraInfo === null ? '' : data[i].offers[0].extraInfo;
+                    $('#container').append(
+                        `<div class="col-md-4">
+                                <div class= "row g-0 border rounded overflow-hidden flex-md-row mb-3 shadow-sm h-md-250 position-relative" >
+                                    <div class="col p-2 d-flex flex-column position-static" >
+                                            <h3 class="mb-0" >`+ data[i].name + `</h3>
+                                                <strong class= "d-inline-block mb-2" >`+ data[i].offers[0].name + `</strong>
+                                                <p class= "d-inline-block mb-2" >`+ extraInfo + `</p>
+                                            <a href = "Checkout/`+ data[i].id + `" class= "text-decoration-none" > Buy now </a>
+                                    </div>
+                                    <div class= "col-auto d-none d-lg-block" >
+                                        <img src = "`+ data[i].imageUrl + `" style = "max-height: 200px" />
+                                    </div>
+                                    <div class= "p-2" >
+                                        <p class="card-text mb-auto" >` + data[i].description + `</p>
+                                    </div>
+                                 </div>
+                            </div>`
+                    );
+                }
+
+            });
+        });
+
+    </script>
+}  
