@@ -1,37 +1,11 @@
 ﻿@page "{productId:int}"
-@using Checkout.DataAccess
-@using Checkout.Models;
-@using Checkout.Pages;
-@using Microsoft.EntityFrameworkCore
-@inject DataContext context
 @{
     Layout = "Shared/_Layout";
-    const int offerNotSelected = 0;
-    context.Database.EnsureCreated();
-
-    var productId = Int32.Parse(RouteData.Values["productId"].ToString());
-    var query = $@"
-            SELECT
-                p.ImageUrl as ImageUrl
-                ,p.Country as Country
-                ,ofr.Id as OfferId
-                ,ofr.Name as OfferName
-                ,ofr.ExtraInfo as OfferExtraInfo       
-            FROM 
-                Product p
-            INNER JOIN Offers ofr
-                ON p.Id = ofr.ProductId
-            WHERE p.Id = {productId}
-        ";
-
-    var offers = context.Database.SqlQueryRaw<CheckoutDto>(query).ToArray();
-    var productInfo = offers.First();
-
 }
 
 <header>
     <h1>Provide your information:</h1>
-    
+
 </header>
 <form>
     <div class="row">
@@ -40,11 +14,7 @@
                 <div class="col-md-6">
                     <label for="ddl_country">Offer:</label>
                     <select class="form-control" id="ddl_offer" name="offer">
-                        <option value="@offerNotSelected" selected>Select offer</option>
-                        @foreach (var offer in offers)
-                        {
-                            <option value="@(offer.OfferId)">@offer.OfferName</option>
-                        }
+                        <option value="0" selected>Select offer</option>
                     </select>
                 </div>
             </div>
@@ -71,46 +41,98 @@
                     <label for="zip">ZIP code:</label>
                     <input type="text" class="form-control" id="zipCode" name="zipCode" placeholder="Enter ZIP code">
                 </div>
-                <div class="col">
+                <div class="col" id="phoneDiv">
                     <label for="telefon">Telephone:</label>
                     <input type="text" class="form-control" id="phone" name="phone" placeholder="Enter telephone number">
-                </div>  
+                </div>
             </div> <br />
-            <input type="hidden" id="country" value="@productInfo.Country">
             <button type="submit" class="btn btn-primary">Place order</button>
         </div>
         <div class="col-md-6">
-            <img src="@productInfo.ImageUrl" />
+            <img id="image" src="" />
         </div>
     </div>
-    
+
 </form>
 
 @section Scripts
 {
     <script>
-        const initialOfferState = parseInt('@offerNotSelected');
+        const initialOfferState = 0;
+        var countryCode = null;
 
         const validate = () => {
             var formIsValid = true;
 
-            const $ddl_offer = $('#ddl_offer');
-            const selectedOffer = $ddl_offer.find(":checked").val();
-            if(parseInt(selectedOffer) === initialOfferState){
-                $ddl_offer.addClass('border').addClass('border-danger');
+            const invalidateInput = (inputId) => {
+                $(inputId).addClass('border').addClass('border-danger');
                 formIsValid = false;
-            } 
-            else {
-                $ddl_offer.removeClass('border').removeClass('border-danger');
             }
 
-            const $email = $('#email');
-            const email = $email.val();
-            if (email.length < 6 || email.indexOf('@@') < 0) {
-                $email.addClass('border').addClass('border-danger');
-                formIsValid = false;
+            const validateInput = (inputId) => {
+                $(inputId).removeClass('border').removeClass('border-danger');
+            }
+
+            const selectedOffer = $('#ddl_offer').find(":checked").val();
+            if (parseInt(selectedOffer) === initialOfferState) {
+                invalidateInput('#ddl_offer');
+            }
+            else {
+                validateInput('#ddl_offer');
+            }
+
+            const emailVal = $('#email').val();
+            if (emailVal.length < 6 || emailVal.indexOf('@@') < 0) {
+                invalidateInput('#email');
             } else {
-                $email.removeClass('border').removeClass('border-danger');
+                validateInput('#email');
+            }
+
+            var zipcodeVal = $('#zipCode').val();
+            var phoneVal = $('#phone').val();
+
+            if (countryCode === 1 || countryCode === 3) { //Sweden or Finland
+                if (zipcodeVal.length != 5 || !$.isNumeric(zipcodeVal)) {
+                    invalidateInput('#zipCode');
+                } else {
+                    validateInput('#zipCode');
+                }
+                if (phoneVal.length < 7 || !$.isNumeric(phoneVal)) { // This needs a better validation
+                    invalidateInput('#phone');
+                } else {
+                    validateInput('#phone');
+                }
+            }
+            else if (countryCode === 2) { //Norway
+                if (zipcodeVal.length != 4 || !$.isNumeric(zipcodeVal)) {
+                    invalidateInput('#zipCode');
+                } else {
+                    validateInput('#zipCode');
+                }
+            }
+
+            var firstNameVal = $('#firstName').val();
+            if (firstNameVal.length < 1) { // I need more info for better validation
+                invalidateInput('#firstName');
+            }
+            else {
+                validateInput('#firstName');
+            }
+
+            var lastNameVal = $('#lastName').val();
+            if (lastNameVal.length < 1) { // I need more info for better validation
+                invalidateInput('#lastName');
+            }
+            else {
+                validateInput('#lastName');
+            }
+
+            var addressVal = $('#address').val();
+            if (addressVal.length < 3) { // I need more info for better validation
+                invalidateInput('#address');
+            }
+            else {
+                validateInput('#address');
             }
 
             $('[type="submit"]').prop('disabled', !formIsValid);
@@ -122,7 +144,7 @@
             $.ajax({
                 type: 'POST',
                 contentType: 'application/json',
-                url: 'https://dev-assignment.mediafy.com/api/Orders',
+                url: window.location.origin + '/api/Checkout',
                 data: JSON.stringify({
                     'OfferId': parseInt($('#ddl_offer').find(":checked").val()),
                     'FirstName': $('#firstName').val(),
@@ -133,21 +155,37 @@
                     'Telephone': $('#phone').val(),
                     'Country': parseInt($('#country').val())
                 }),
-                success: function(){
+                success: function () {
                     alert('Thank you for your order!');
                 },
-                error: function (jqXHR, textStatus, errorThrown){
+                error: function (jqXHR, textStatus, errorThrown) {
                     alert('Oh no, we encountered an error!');
                 }
             });
         }
 
         $(() => {
+            var productId = window.location.href.substr(window.location.href.lastIndexOf('/') + 1);
+
+            $.get(window.location.origin + "/api/Product/" + productId, function (data, status) {
+                countryCode = data.country;
+                if (countryCode === 2) {
+                    $('#phoneDiv').hide()
+                }
+
+                $('#image').attr('src', data.imageUrl);
+                for (let i = 0; i < data.offers.length; i++) {
+                    $('#ddl_offer').append(
+                        ` <option value="` + data.offers[i].id + `">` + data.offers[i].name + `</option>`
+                    );
+                }
+            });
+
             $('form input, form select').on('change', validate);
             validate();
 
             $('form').on('submit', submitOrder);
-        })        
-    
+        })
+
     </script>
 }  
